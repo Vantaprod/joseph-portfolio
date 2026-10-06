@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { ProjectHeroMedia } from "@/components/public/ProjectHeroMedia";
 
 export const dynamic = "force-dynamic";
 
@@ -66,31 +67,12 @@ export default async function ProjectDetailPage({
         </h1>
       </header>
 
-      {/* Hero media — respects native aspect ratio, no crop, no letterbox */}
-      {project.videoUrl ? (
-        <div className="bg-black rounded-2xl overflow-hidden mb-8 md:mb-12 flex items-center justify-center">
-          <video
-            src={project.videoUrl}
-            controls
-            playsInline
-            preload="metadata"
-            className="w-full h-auto max-h-[80vh] object-contain"
-          />
-        </div>
-      ) : project.thumbnail ? (
-        <div className="bg-black rounded-2xl overflow-hidden mb-8 md:mb-12 flex items-center justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={project.thumbnail}
-            alt={project.title}
-            className="w-full h-auto max-h-[80vh] object-contain"
-          />
-        </div>
-      ) : (
-        <div className="aspect-video bg-surface border border-base rounded-2xl flex items-center justify-center mb-8 md:mb-12">
-          <span className="text-muted">No media available</span>
-        </div>
-      )}
+      {/* Hero media — shrinks to fit native aspect ratio, no side bars */}
+      <ProjectHeroMedia
+        videoUrl={project.videoUrl}
+        thumbnail={project.thumbnail}
+        title={project.title}
+      />
 
       {/* Info grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-12 md:mb-16">
@@ -137,7 +119,7 @@ export default async function ProjectDetailPage({
         </aside>
       </div>
 
-      {/* Gallery — also respects native aspect ratio */}
+      {/* Gallery — fits native aspect ratio */}
       {gallery.length > 0 && (
         <section className="mb-12 md:mb-16">
           <h2 className="text-xs uppercase tracking-widest text-primary mb-6">
@@ -155,7 +137,8 @@ export default async function ProjectDetailPage({
                   alt={`${project.title} — ${i + 1}`}
                   loading="lazy"
                   decoding="async"
-                  className="w-full h-auto max-h-[70vh] object-contain"
+                  className="w-full h-auto max-h-[70vh] mx-auto"
+                  style={{ objectFit: "contain" }}
                 />
               </div>
             ))}
