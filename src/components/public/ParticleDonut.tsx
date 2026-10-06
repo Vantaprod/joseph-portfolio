@@ -11,7 +11,7 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
     const container = containerRef.current;
     if (!canvas || !container) return;
 
-    const ctx = canvas.getContext("2d", { alpha: false });
+    const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -164,8 +164,7 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
       }
 
       // Draw
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, width, height);
+      ctx.clearRect(0, 0, width, height);
       ctx.fillStyle = "#ffffff";
 
       // On mobile, skip the alpha blending (it's expensive)
