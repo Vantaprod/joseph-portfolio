@@ -1,50 +1,68 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { ProjectCard } from "@/components/public/ProjectCard";
-import { ScrollDrivenTestimonials } from "@/components/public/ScrollDrivenTestimonials";
+import { TestimonialCarousel } from "@/components/public/TestimonialCarousel";
 import { ClientLogos } from "@/components/public/ClientLogos";
+import { ParticleDonut } from "@/components/public/ParticleDonut";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [settings, featured, services, testimonials, clientLogos] = await Promise.all([
-    prisma.siteSettings.findFirst(),
-    prisma.project.findMany({
-      where: { featured: true, published: true },
-      orderBy: { order: "asc" },
-      take: 3,
-    }),
-    prisma.service.findMany({
-      where: { published: true },
-      orderBy: { order: "asc" },
-      take: 4,
-    }),
-    prisma.testimonial.findMany({
-      where: { published: true },
-      orderBy: { order: "asc" },
-    }),
-    prisma.clientLogo.findMany({
-      where: { published: true },
-      orderBy: { order: "asc" },
-    }),
-  ]);
+  const [settings, featured, services, testimonials, clientLogos] =
+    await Promise.all([
+      prisma.siteSettings.findFirst(),
+      prisma.project.findMany({
+        where: { featured: true, published: true },
+        orderBy: { order: "asc" },
+        take: 3,
+      }),
+      prisma.service.findMany({
+        where: { published: true },
+        orderBy: { order: "asc" },
+        take: 4,
+      }),
+      prisma.testimonial.findMany({
+        where: { published: true },
+        orderBy: { order: "asc" },
+      }),
+      prisma.clientLogo.findMany({
+        where: { published: true },
+        orderBy: { order: "asc" },
+      }),
+    ]);
 
   const heroHeading = settings?.heroHeading ?? "FRAME YOUR STORY.";
-  const heroSubtitle =
-    settings?.heroSubtitle ?? "Cinematographer • Videographer • Editor";
+  const heroSubtitle = settings?.heroSubtitle ?? "Cinematographer - Videographer - Editor";
   const heroCta = settings?.heroCtaLabel ?? "View My Work";
   const heroCtaLink = settings?.heroCtaLink ?? "/work";
   const heroSecondary = settings?.heroSecondaryCta ?? "Contact Me";
   const heroSecondaryLink = settings?.heroSecondaryLink ?? "/contact";
-return (
+
+  return (
     <>
       {/* HERO */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center overflow-hidden w-full max-w-full">
         <div className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-[var(--bg)]" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full py-14 md:py-24">
+        {/* Particle donut */}
+        <div
+          className="absolute inset-0 pointer-events-none flex items-center justify-end pr-4 md:pr-8 lg:pr-16"
+          aria-hidden="true"
+        >
+          <div
+            className="relative opacity-30 md:opacity-100"
+            style={{
+              width: "min(60vw, 600px)",
+              height: "min(60vw, 600px)",
+            }}
+          >
+            <ParticleDonut />
+          </div>
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full py-24">
           <p className="text-xs uppercase tracking-[0.3em] text-primary mb-6">
             {heroSubtitle}
           </p>
@@ -59,12 +77,14 @@ return (
           <div className="mt-10 flex flex-wrap gap-4">
             <Link
               href={heroCtaLink}
+              prefetch={true}
               className="bg-primary text-white font-semibold px-7 py-3.5 rounded-full transition-all hover:shadow-[0_0_20px_rgba(232,122,45,0.4)]"
             >
               {heroCta}
             </Link>
             <Link
               href={heroSecondaryLink}
+              prefetch={true}
               className="border-2 border-base text-base font-semibold px-7 py-3.5 rounded-full transition-all duration-200 hover:border-[var(--color-primary)] hover:text-primary hover:bg-[rgba(232,122,45,0.08)] focus:outline-none focus:border-[var(--color-primary)] focus:text-primary focus:bg-[rgba(232,122,45,0.08)] focus:shadow-[0_0_0_4px_rgba(232,122,45,0.20)] active:scale-95"
             >
               {heroSecondary}
@@ -74,7 +94,7 @@ return (
       </section>
 
       {/* FEATURED WORK */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-14 md:py-24">
+      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
         <div className="flex items-end justify-between mb-12">
           <div>
             <p className="text-xs uppercase tracking-widest text-primary mb-3">
@@ -86,6 +106,7 @@ return (
           </div>
           <Link
             href="/work"
+            prefetch={true}
             className="hidden md:inline text-sm text-muted hover:text-primary transition-colors"
           >
             View all
@@ -105,7 +126,7 @@ return (
 
       {/* SERVICES PREVIEW */}
       <section className="bg-surface border-y border-base">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-14 md:py-24">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
           <p className="text-xs uppercase tracking-widest text-primary mb-3">
             What I Do
           </p>
@@ -134,6 +155,7 @@ return (
 
           <Link
             href="/services"
+            prefetch={true}
             className="inline-block mt-10 text-sm text-primary hover:underline"
           >
             Explore all services
@@ -142,15 +164,14 @@ return (
       </section>
 
       {/* ABOUT PREVIEW */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-14 md:py-24">
+      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
             <p className="text-xs uppercase tracking-widest text-primary mb-3">
               About
             </p>
             <h2 className="text-3xl md:text-5xl font-bold text-base mb-6">
-              {settings?.aboutHeadline ??
-                "Creative Director & Cinematographer"}
+              {settings?.aboutHeadline ?? "Creative Director & Cinematographer"}
             </h2>
             <p className="text-muted leading-relaxed mb-8">
               {settings?.aboutBio ||
@@ -158,6 +179,7 @@ return (
             </p>
             <Link
               href="/about"
+              prefetch={true}
               className="inline-block border-2 border-base text-base font-semibold px-7 py-3.5 rounded-full transition-all duration-200 hover:border-[var(--color-primary)] hover:text-primary hover:bg-[rgba(232,122,45,0.08)] focus:outline-none focus:border-[var(--color-primary)] focus:text-primary focus:bg-[rgba(232,122,45,0.08)] focus:shadow-[0_0_0_4px_rgba(232,122,45,0.20)] active:scale-95"
             >
               More About Me
@@ -165,7 +187,6 @@ return (
           </div>
           <div className="relative aspect-square bg-surface border border-base rounded-3xl overflow-hidden flex items-center justify-center">
             {settings?.aboutImage ? (
-              // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={settings.aboutImage}
                 alt={settings.aboutName ?? "Profile"}
@@ -178,15 +199,14 @@ return (
         </div>
       </section>
 
-      {/* TESTIMONIALS - scroll-driven glass panels */}
-      <ScrollDrivenTestimonials testimonials={testimonials} />
+      {testimonials.length > 0 && (
+        <TestimonialCarousel testimonials={testimonials} />
+      )}
 
-      {/* CLIENT LOGOS */}
-      <ClientLogos clients={clientLogos} />
+      {clientLogos.length > 0 && <ClientLogos clients={clientLogos} />}
 
-      {/* CTA */}
       <section className="bg-surface border-t border-base">
-        <div className="max-w-4xl mx-auto px-6 lg:px-8 py-14 md:py-24 text-center">
+        <div className="max-w-4xl mx-auto px-6 lg:px-8 py-24 text-center">
           <h2 className="text-3xl md:text-5xl font-bold text-base mb-6">
             Got a project in mind?
           </h2>
@@ -195,6 +215,7 @@ return (
           </p>
           <Link
             href="/contact"
+            prefetch={true}
             className="inline-block bg-primary text-white font-semibold px-8 py-4 rounded-full transition-all hover:shadow-[0_0_20px_rgba(232,122,45,0.4)]"
           >
             Start a Conversation
