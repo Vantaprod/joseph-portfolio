@@ -11,10 +11,11 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
     const container = containerRef.current;
     if (!canvas || !container) return;
 
-    const ctx = canvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
 
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const isMobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
     const CHARS = ".,-~:;=!*#$@";
     const CHARS_LEN = CHARS.length;
@@ -25,6 +26,7 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
     let rows = 0;
     let cellW = 8;
     let cellH = 14;
+    let fontSize = 11;
     let zbuf: Float32Array | null = null;
     let cbuf: Uint8Array | null = null;
 
@@ -32,16 +34,23 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
       if (!canvas || !ctx || !container) return false;
       const cw = canvas.clientWidth || container.clientWidth || 0;
       const ch = canvas.clientHeight || container.clientHeight || 0;
-      if (cw < 60 || ch < 60) return false;
+      if (cw < 40 || ch < 40) return false;
 
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Cap DPR aggressively on mobile for performance
+      const maxDpr = isMobile ? 1 : 1.5;
+      const dpr = Math.min(window.devicePixelRatio || 1, maxDpr);
+
       width = cw;
       height = ch;
       canvas.width = Math.floor(cw * dpr);
       canvas.height = Math.floor(ch * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const fontSize = Math.max(8, Math.min(14, cw / 55));
+      // Larger font on mobile = fewer cells = faster
+      fontSize = isMobile
+        ? Math.max(9, Math.min(14, cw / 32))
+        : Math.max(8, Math.min(14, cw / 55));
+
       cellW = fontSize * 0.6;
       cellH = fontSize * 1.15;
 
@@ -68,8 +77,20 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
     let A = -1.15;
     let B = 0;
 
+    // Frame throttle for mobile (cap at ~30 fps)
+    let lastFrame = 0;
+    const MIN_FRAME_MS = isMobile ? 33 : 0;
+
     function render(now: number) {
       if (!running || !ctx) return;
+
+      // Throttle frames on mobile
+      if (MIN_FRAME_MS > 0 && now - lastFrame < MIN_FRAME_MS) {
+        rafId = requestAnimationFrame(render);
+        return;
+      }
+      lastFrame = now;
+
       if (!zbuf || !cbuf || cols === 0 || rows === 0) {
         if (!resize()) {
           rafId = requestAnimationFrame(render);
@@ -78,16 +99,16 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
       }
       if (!zbuf || !cbuf) return;
 
-      // Growth animation
       const elapsed = now - mountTime;
       const rawGrow = Math.min(1, elapsed / GROWTH_MS);
       const eased = 1 - Math.pow(1 - rawGrow, 3);
       const grow = 0.25 + 0.75 * eased;
 
-      // Rotate
+      // Slower rotation on mobile to reduce CPU
+      const rotateSpeed = isMobile ? 0.9 : 1;
       if (!motionQuery.matches) {
-        A += 0.012;
-        B += 0.007;
+        A += 0.012 * rotateSpeed;
+        B += 0.007 * rotateSpeed;
       }
       const sinA = Math.sin(A), cosA = Math.cos(A);
       const sinB = Math.sin(B), cosB = Math.cos(B);
@@ -98,18 +119,13 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
       const cx = cols / 2;
       const cy = rows / 2;
 
-      // Scale in CHARACTER units
-      // Classic donut.c uses 30 (x) and 15 (y) for 80x22 grid → ratios 0.375 and 0.68
-      // We want pixel-correct aspect: cellW < cellH so scaleY should be < scaleX/2
-      // Compute scale in CHARACTER units based on pixel dimensions.
-      // 0.75 is the max projected radius of the torus (outer edge at z=0).
-      // Multiply by cellW/cellH to keep the donut circular on screen.
       const radiusPx = Math.min(width, height) * 0.44;
       const scaleX = (radiusPx / cellW) * 1.333 * grow;
       const scaleY = (radiusPx / cellH) * 1.333 * grow;
 
-      const thetaStep = 0.075;
-      const phiStep = 0.022;
+      // Wider sampling steps on mobile (fewer points to project)
+      const thetaStep = isMobile ? 0.11 : 0.075;
+      const phiStep = isMobile ? 0.035 : 0.022;
 
       for (let theta = 0; theta < Math.PI * 2; theta += thetaStep) {
         const ct = Math.cos(theta);
@@ -119,7 +135,6 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
           const cp = Math.cos(phi);
           const sp = Math.sin(phi);
 
-          // --- Exact donut.c math ---
           const h = ct + 2;
           const D = 1 / (sp * h * sinA + st * cosA + 5);
           const t = sp * h * cosA - st * sinA;
@@ -137,22 +152,24 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
 
           zbuf[o] = D;
 
-          // Luminance
-          const N = (CHARS_LEN - 1) * (
-            (st * sinA - sp * ct * cosA) * cosB
-            - sp * ct * sinA
-            - st * cosA
-            - cp * ct * sinB
-          );
+          const N =
+            (CHARS_LEN - 1) *
+            ((st * sinA - sp * ct * cosA) * cosB -
+              sp * ct * sinA -
+              st * cosA -
+              cp * ct * sinB);
 
           cbuf[o] = N > 0 ? Math.min(CHARS_LEN - 1, Math.floor(N)) : 0;
         }
       }
 
-      // Render
-      ctx.clearRect(0, 0, width, height);
+      // Draw
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, width, height);
       ctx.fillStyle = "#ffffff";
-      ctx.globalAlpha = 1;
+
+      // On mobile, skip the alpha blending (it's expensive)
+      const useAlpha = !isMobile;
 
       for (let y = 0; y < rows; y++) {
         const py = y * cellH;
@@ -160,27 +177,49 @@ export function ParticleDonut({ className = "" }: { className?: string }) {
           const idx = x + y * cols;
           const ci = cbuf[idx];
           if (ci === 255) continue;
-          const D = zbuf[idx];
-          // Subtle depth fade
-          const alpha = Math.min(1, Math.max(0.35, D * 3.5));
-          ctx.globalAlpha = alpha;
+
+          if (useAlpha) {
+            const D = zbuf[idx];
+            ctx.globalAlpha = Math.min(1, Math.max(0.35, D * 3.5));
+          }
+
           ctx.fillText(CHARS[ci], x * cellW, py);
         }
       }
-      ctx.globalAlpha = 1;
+
+      if (useAlpha) ctx.globalAlpha = 1;
 
       rafId = requestAnimationFrame(render);
     }
 
     rafId = requestAnimationFrame(render);
 
-    const ro = new ResizeObserver(() => { resize(); });
+    const ro = new ResizeObserver(() => {
+      resize();
+    });
     ro.observe(container);
+
+    // Pause when the tab is hidden
+    const onVisibility = () => {
+      if (document.hidden) {
+        running = false;
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = 0;
+        }
+      } else {
+        running = true;
+        lastFrame = 0;
+        if (!rafId) rafId = requestAnimationFrame(render);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       running = false;
       if (rafId) cancelAnimationFrame(rafId);
       ro.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, []);
 
