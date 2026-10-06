@@ -66,29 +66,31 @@ export default async function ProjectDetailPage({
         </h1>
       </header>
 
-      {/* Hero media */}
-      <div className="relative aspect-video bg-surface border border-base rounded-2xl overflow-hidden mb-8 md:mb-12">
-        {project.videoUrl ? (
+      {/* Hero media — respects native aspect ratio, no crop, no letterbox */}
+      {project.videoUrl ? (
+        <div className="bg-black rounded-2xl overflow-hidden mb-8 md:mb-12 flex items-center justify-center">
           <video
             src={project.videoUrl}
             controls
             playsInline
             preload="metadata"
-            className="absolute inset-0 w-full h-full object-contain bg-black"
+            className="w-full h-auto max-h-[80vh] object-contain"
           />
-        ) : project.thumbnail ? (
-          // eslint-disable-next-line @next/next/no-img-element
+        </div>
+      ) : project.thumbnail ? (
+        <div className="bg-black rounded-2xl overflow-hidden mb-8 md:mb-12 flex items-center justify-center">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={project.thumbnail}
             alt={project.title}
-            className="absolute inset-0 w-full h-full object-cover"
+            className="w-full h-auto max-h-[80vh] object-contain"
           />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-muted">
-            No media available
-          </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="aspect-video bg-surface border border-base rounded-2xl flex items-center justify-center mb-8 md:mb-12">
+          <span className="text-muted">No media available</span>
+        </div>
+      )}
 
       {/* Info grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 mb-12 md:mb-16">
@@ -135,7 +137,7 @@ export default async function ProjectDetailPage({
         </aside>
       </div>
 
-      {/* Gallery */}
+      {/* Gallery — also respects native aspect ratio */}
       {gallery.length > 0 && (
         <section className="mb-12 md:mb-16">
           <h2 className="text-xs uppercase tracking-widest text-primary mb-6">
@@ -145,7 +147,7 @@ export default async function ProjectDetailPage({
             {gallery.map((src, i) => (
               <div
                 key={i}
-                className="relative aspect-video bg-surface border border-base rounded-xl overflow-hidden"
+                className="bg-black border border-base rounded-xl overflow-hidden flex items-center justify-center"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -153,7 +155,7 @@ export default async function ProjectDetailPage({
                   alt={`${project.title} — ${i + 1}`}
                   loading="lazy"
                   decoding="async"
-                  className="absolute inset-0 w-full h-full object-cover"
+                  className="w-full h-auto max-h-[70vh] object-contain"
                 />
               </div>
             ))}
