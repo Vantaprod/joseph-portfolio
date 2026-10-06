@@ -41,28 +41,31 @@ export default async function HomePage() {
   return (
     <>
       {/* HERO */}
-      <section className="relative min-h-[90vh] flex items-center overflow-hidden w-full max-w-full">
+      <section className="relative w-full max-w-full overflow-hidden">
+        {/* Gradient bg */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-[var(--bg)]" />
         </div>
 
-        {/* Particle donut */}
+        {/* Desktop-only donut positioned right */}
         <div
-          className="absolute inset-0 pointer-events-none flex items-center justify-end pr-4 md:pr-8 lg:pr-16"
+          className="hidden md:flex absolute inset-0 pointer-events-none items-center justify-end pr-8 lg:pr-16"
           aria-hidden="true"
         >
           <div
-            className="relative opacity-30 md:opacity-100"
+            className="relative"
             style={{
-              width: "min(60vw, 600px)",
-              height: "min(60vw, 600px)",
+              width: "min(46vw, 620px)",
+              height: "min(46vw, 620px)",
             }}
           >
             <ParticleDonut />
           </div>
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 w-full py-24">
+        {/* Content stack */}
+        <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-12 md:py-24 md:min-h-[90vh] flex flex-col justify-center">
+          {/* Hero text */}
           <p className="text-xs uppercase tracking-[0.3em] text-primary mb-6">
             {heroSubtitle}
           </p>
@@ -89,6 +92,22 @@ export default async function HomePage() {
             >
               {heroSecondary}
             </Link>
+          </div>
+
+          {/* Mobile-only donut BELOW the text */}
+          <div
+            className="flex md:hidden items-center justify-center mt-12 md:mt-0 pointer-events-none"
+            aria-hidden="true"
+          >
+            <div
+              className="relative w-full"
+              style={{
+                maxWidth: "min(85vw, 420px)",
+                aspectRatio: "1 / 1",
+              }}
+            >
+              <ParticleDonut />
+            </div>
           </div>
         </div>
       </section>
