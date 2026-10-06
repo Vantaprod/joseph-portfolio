@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePublic } from "@/lib/revalidate";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 
@@ -7,6 +8,7 @@ export const runtime = "nodejs";
 
 export async function GET() {
   if (!(await requireAdmin())) {
+    revalidatePublic();
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -83,6 +85,8 @@ export async function GET() {
     const day = days.find((d) => d.date === key);
     if (day) day.views++;
   }
+
+  revalidatePublic();
 
   return NextResponse.json({
     totals: {

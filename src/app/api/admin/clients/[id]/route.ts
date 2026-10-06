@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePublic } from "@/lib/revalidate";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -30,9 +31,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
         published: p.data.published,
       },
     });
+    revalidatePublic();
     return NextResponse.json(item);
   } catch (err) {
     console.error(err);
+    revalidatePublic();
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
   }
 }
@@ -42,8 +45,10 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   const { id } = await params;
   try {
     await prisma.clientLogo.delete({ where: { id } });
+    revalidatePublic();
     return NextResponse.json({ ok: true });
   } catch {
+    revalidatePublic();
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

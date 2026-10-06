@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePublic } from "@/lib/revalidate";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
 
@@ -10,13 +11,16 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await requireAdmin())) {
+    revalidatePublic();
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
   const project = await prisma.project.findUnique({ where: { id } });
   if (!project) {
+    revalidatePublic();
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
+  revalidatePublic();
   return NextResponse.json(project);
 }
 
@@ -25,6 +29,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await requireAdmin())) {
+    revalidatePublic();
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
@@ -49,9 +54,11 @@ export async function PUT(
         order: Number(b.order) || 0,
       },
     });
+    revalidatePublic();
     return NextResponse.json(project);
   } catch (err) {
     console.error("Project update error:", err);
+    revalidatePublic();
     return NextResponse.json(
       { error: "Failed to update project" },
       { status: 500 }
@@ -64,13 +71,16 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   if (!(await requireAdmin())) {
+    revalidatePublic();
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
   try {
     await prisma.project.delete({ where: { id } });
+    revalidatePublic();
     return NextResponse.json({ ok: true });
   } catch {
+    revalidatePublic();
     return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
   }
 }

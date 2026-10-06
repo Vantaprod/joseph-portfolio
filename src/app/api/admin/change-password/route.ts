@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePublic } from "@/lib/revalidate";
 import { getServerSession } from "next-auth";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
@@ -18,6 +19,7 @@ export async function POST(req: Request) {
   const email = session?.user?.email;
 
   if (!email) {
+    revalidatePublic();
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -26,6 +28,7 @@ export async function POST(req: Request) {
     const parsed = schema.safeParse(body);
 
     if (!parsed.success) {
+      revalidatePublic();
       return NextResponse.json(
         { error: parsed.error.issues[0]?.message ?? "Invalid data" },
         { status: 400 }
@@ -34,11 +37,13 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) {
+      revalidatePublic();
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     const valid = await bcrypt.compare(parsed.data.currentPassword, user.password);
     if (!valid) {
+      revalidatePublic();
       return NextResponse.json(
         { error: "Current password is incorrect" },
         { status: 400 }
@@ -52,9 +57,12 @@ export async function POST(req: Request) {
       data: { password: hashed },
     });
 
+    revalidatePublic();
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Password change error:", err);
+    revalidatePublic();
     return NextResponse.json({ error: "Failed to change password" }, { status: 500 });
   }
 }

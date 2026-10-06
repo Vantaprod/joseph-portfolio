@@ -17,10 +17,6 @@ export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-/**
- * Retry wrapper for Prisma queries.
- * Handles Neon cold-start P1001 errors by retrying a few times.
- */
 export async function withRetry<T>(
   fn: () => Promise<T>,
   attempts = 3,
@@ -33,8 +29,6 @@ export async function withRetry<T>(
     } catch (err) {
       lastError = err;
       const code = (err as { code?: string })?.code;
-      // P1001 = can't reach DB (cold start)
-      // P1017 = server closed connection
       const retryable = code === "P1001" || code === "P1017";
       if (!retryable || i === attempts - 1) throw err;
       console.warn(

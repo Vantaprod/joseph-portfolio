@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePublic } from "@/lib/revalidate";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -17,6 +18,7 @@ const schema = z.object({
 export async function GET() {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const items = await prisma.clientLogo.findMany({ orderBy: { order: "asc" } });
+  revalidatePublic();
   return NextResponse.json(items);
 }
 
@@ -34,9 +36,11 @@ export async function POST(req: Request) {
         published: p.data.published,
       },
     });
+    revalidatePublic();
     return NextResponse.json(item);
   } catch (err) {
     console.error(err);
+    revalidatePublic();
     return NextResponse.json({ error: "Failed to create" }, { status: 500 });
   }
 }

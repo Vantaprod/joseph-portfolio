@@ -1,5 +1,6 @@
 import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
+import { revalidatePublic } from "@/lib/revalidate";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +8,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   if (!(await requireAdmin())) {
+    revalidatePublic();
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -31,9 +33,11 @@ export async function POST(req: Request) {
         // Nothing to do — the URL comes back to the client
       },
     });
+    revalidatePublic();
     return NextResponse.json(jsonResponse);
   } catch (err) {
     console.error("Upload error:", err);
+    revalidatePublic();
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Upload failed" },
       { status: 400 }
