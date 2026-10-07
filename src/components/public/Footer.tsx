@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 export async function Footer() {
@@ -34,6 +34,7 @@ export async function Footer() {
                 { href: "/work", label: "Work" },
                 { href: "/about", label: "About" },
                 { href: "/services", label: "Services" },
+                { href: "/software", label: "Software" },
                 { href: "/contact", label: "Contact" },
                 { href: "/media-kit", label: "Media Kit" },
               ].map((l) => (

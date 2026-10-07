@@ -3,12 +3,13 @@ import { prisma } from "@/lib/prisma";
 import { ProjectCard } from "@/components/public/ProjectCard";
 import { TestimonialCarousel } from "@/components/public/TestimonialCarousel";
 import { ClientLogos } from "@/components/public/ClientLogos";
+import { SoftwareCard } from "@/components/public/SoftwareCard";
 import { ParticleDonut } from "@/components/public/ParticleDonut";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [settings, featured, services, testimonials, clientLogos] =
+  const [settings, featured, services, testimonials, clientLogos, software] =
     await Promise.all([
       prisma.siteSettings.findFirst(),
       prisma.project.findMany({
@@ -29,10 +30,16 @@ export default async function HomePage() {
         where: { published: true },
         orderBy: { order: "asc" },
       }),
+      prisma.softwareProject.findMany({
+        where: { featured: true, published: true },
+        orderBy: { order: "asc" },
+        take: 3,
+      }),
     ]);
 
   const heroHeading = settings?.heroHeading ?? "FRAME YOUR STORY.";
-  const heroSubtitle = settings?.heroSubtitle ?? "Cinematographer - Videographer - Editor";
+  const heroSubtitle =
+    settings?.heroSubtitle ?? "Cinematographer - Videographer - Editor";
   const heroCta = settings?.heroCtaLabel ?? "View My Work";
   const heroCtaLink = settings?.heroCtaLink ?? "/work";
   const heroSecondary = settings?.heroSecondaryCta ?? "Contact Me";
@@ -42,7 +49,6 @@ export default async function HomePage() {
     <>
       {/* HERO */}
       <section className="relative w-full max-w-full overflow-hidden">
-        {/* Gradient bg */}
         <div className="absolute inset-0 -z-10">
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-[var(--bg)]" />
         </div>
@@ -54,18 +60,13 @@ export default async function HomePage() {
         >
           <div
             className="relative"
-            style={{
-              width: "min(46vw, 620px)",
-              height: "min(46vw, 620px)",
-            }}
+            style={{ width: "min(46vw, 620px)", height: "min(46vw, 620px)" }}
           >
             <ParticleDonut />
           </div>
         </div>
 
-        {/* Content stack */}
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 py-12 md:py-24 md:min-h-[90vh] flex flex-col justify-center">
-          {/* Hero text */}
           <p className="text-xs uppercase tracking-[0.3em] text-primary mb-6">
             {heroSubtitle}
           </p>
@@ -94,17 +95,14 @@ export default async function HomePage() {
             </Link>
           </div>
 
-          {/* Mobile-only donut BELOW the text */}
+          {/* Mobile-only donut */}
           <div
-            className="flex md:hidden items-center justify-center mt-12 md:mt-0 pointer-events-none"
+            className="flex md:hidden items-center justify-center mt-12 pointer-events-none"
             aria-hidden="true"
           >
             <div
               className="relative w-full"
-              style={{
-                maxWidth: "min(85vw, 420px)",
-                aspectRatio: "1 / 1",
-              }}
+              style={{ maxWidth: "min(85vw, 420px)", aspectRatio: "1 / 1" }}
             >
               <ParticleDonut />
             </div>
@@ -143,77 +141,109 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* SERVICES PREVIEW */}
-      <section className="bg-surface border-y border-base">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
-          <p className="text-xs uppercase tracking-widest text-primary mb-3">
-            What I Do
-          </p>
-          <h2 className="text-3xl md:text-5xl font-bold text-base mb-12 max-w-2xl">
-            Services built for stories that need to be seen.
-          </h2>
-
-          {services.length === 0 ? (
-            <p className="text-muted">No services yet.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {services.map((s) => (
-                <div
-                  key={s.id}
-                  className="bg-base border border-base rounded-2xl p-6 hover:border-[var(--color-primary)] transition-colors"
-                >
-                  <div className="w-8 h-0.5 bg-primary mb-4" />
-                  <h3 className="text-lg font-semibold text-base">{s.title}</h3>
-                  <p className="text-sm text-muted mt-3 leading-relaxed">
-                    {s.description}
-                  </p>
-                </div>
+      {/* SOFTWARE PREVIEW */}
+      {software.length > 0 && (
+        <section className="bg-surface border-y border-base">
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
+            <div className="flex items-end justify-between mb-12">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-primary mb-3">
+                  Software &amp; AI
+                </p>
+                <h2 className="text-3xl md:text-5xl font-bold text-base">
+                  Things I Build
+                </h2>
+              </div>
+              <Link
+                href="/software"
+                prefetch={true}
+                className="hidden md:inline text-sm text-muted hover:text-primary transition-colors"
+              >
+                View all
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {software.map((item) => (
+                <SoftwareCard key={item.id} item={item} />
               ))}
             </div>
-          )}
+          </div>
+        </section>
+      )}
 
-          <Link
-            href="/services"
-            prefetch={true}
-            className="inline-block mt-10 text-sm text-primary hover:underline"
-          >
-            Explore all services
-          </Link>
-        </div>
+      {/* SERVICES PREVIEW */}
+      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
+        <p className="text-xs uppercase tracking-widest text-primary mb-3">
+          What I Do
+        </p>
+        <h2 className="text-3xl md:text-5xl font-bold text-base mb-12 max-w-2xl">
+          Services built for stories that need to be seen.
+        </h2>
+
+        {services.length === 0 ? (
+          <p className="text-muted">No services yet.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {services.map((s) => (
+              <div
+                key={s.id}
+                className="bg-surface border border-base rounded-2xl p-6 hover:border-[var(--color-primary)] transition-colors"
+              >
+                <div className="w-8 h-0.5 bg-primary mb-4" />
+                <h3 className="text-lg font-semibold text-base">{s.title}</h3>
+                <p className="text-sm text-muted mt-3 leading-relaxed">
+                  {s.description}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <Link
+          href="/services"
+          prefetch={true}
+          className="inline-block mt-10 text-sm text-primary hover:underline"
+        >
+          Explore all services
+        </Link>
       </section>
 
       {/* ABOUT PREVIEW */}
-      <section className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <p className="text-xs uppercase tracking-widest text-primary mb-3">
-              About
-            </p>
-            <h2 className="text-3xl md:text-5xl font-bold text-base mb-6">
-              {settings?.aboutHeadline ?? "Creative Director & Cinematographer"}
-            </h2>
-            <p className="text-muted leading-relaxed mb-8">
-              {settings?.aboutBio ||
-                "I am a creative professional specializing in cinematography, videography and video editing."}
-            </p>
-            <Link
-              href="/about"
-              prefetch={true}
-              className="inline-block border-2 border-base text-base font-semibold px-7 py-3.5 rounded-full transition-all duration-200 hover:border-[var(--color-primary)] hover:text-primary hover:bg-[rgba(232,122,45,0.08)] focus:outline-none focus:border-[var(--color-primary)] focus:text-primary focus:bg-[rgba(232,122,45,0.08)] focus:shadow-[0_0_0_4px_rgba(232,122,45,0.20)] active:scale-95"
-            >
-              More About Me
-            </Link>
-          </div>
-          <div className="relative aspect-square bg-surface border border-base rounded-3xl overflow-hidden flex items-center justify-center">
-            {settings?.aboutImage ? (
-              <img
-                src={settings.aboutImage}
-                alt={settings.aboutName ?? "Profile"}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <p className="text-muted text-sm">Profile Image</p>
-            )}
+      <section className="bg-surface border-y border-base">
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-24">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-primary mb-3">
+                About
+              </p>
+              <h2 className="text-3xl md:text-5xl font-bold text-base mb-6">
+                {settings?.aboutHeadline ??
+                  "Creative Director & Cinematographer"}
+              </h2>
+              <p className="text-muted leading-relaxed mb-8">
+                {settings?.aboutBio ||
+                  "I am a creative professional specializing in cinematography, videography and video editing."}
+              </p>
+              <Link
+                href="/about"
+                prefetch={true}
+                className="inline-block border-2 border-base text-base font-semibold px-7 py-3.5 rounded-full transition-all duration-200 hover:border-[var(--color-primary)] hover:text-primary hover:bg-[rgba(232,122,45,0.08)] focus:outline-none focus:border-[var(--color-primary)] focus:text-primary focus:bg-[rgba(232,122,45,0.08)] focus:shadow-[0_0_0_4px_rgba(232,122,45,0.20)] active:scale-95"
+              >
+                More About Me
+              </Link>
+            </div>
+            <div className="relative aspect-square bg-base border border-base rounded-3xl overflow-hidden flex items-center justify-center">
+              {settings?.aboutImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={settings.aboutImage}
+                  alt={settings.aboutName ?? "Profile"}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <p className="text-muted text-sm">Profile Image</p>
+              )}
+            </div>
           </div>
         </div>
       </section>
@@ -224,6 +254,7 @@ export default async function HomePage() {
 
       {clientLogos.length > 0 && <ClientLogos clients={clientLogos} />}
 
+      {/* CTA */}
       <section className="bg-surface border-t border-base">
         <div className="max-w-4xl mx-auto px-6 lg:px-8 py-24 text-center">
           <h2 className="text-3xl md:text-5xl font-bold text-base mb-6">

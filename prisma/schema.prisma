@@ -3,21 +3,48 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = "postgresql://neondb_owner:npg_B0rtZY5wUaLo@ep-muddy-snow-b1uqzwp1.c-5.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+model ClientLogo {
+  id        String   @id
+  name      String
+  logoUrl   String
+  website   String?
+  order     Int      @default(0)
+  published Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String   @default("Admin")
+model Message {
+  id          String   @id
+  name        String
+  email       String
+  phone       String?
+  projectType String?
+  budgetRange String?
+  message     String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+
+model PageView {
+  id        String   @id
+  path      String
+  projectId String?
+  referrer  String?
+  userAgent String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([path])
+  @@index([projectId])
 }
 
 model Project {
-  id          String   @id @default(cuid())
+  id          String   @id
   title       String
   slug        String   @unique
   description String
@@ -32,160 +59,141 @@ model Project {
   published   Boolean  @default(true)
   order       Int      @default(0)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime
+}
+
+model PushSubscription {
+  id        String   @id
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
 }
 
 model Service {
-  id          String   @id @default(cuid())
+  id          String   @id
   title       String
   description String
   icon        String?
   order       Int      @default(0)
   published   Boolean  @default(true)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Testimonial {
-  id          String   @id @default(cuid())
-  clientName  String
-  company     String?
-  role        String?
-  content     String
-  image       String?
-  order       Int      @default(0)
-  published   Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-model Message {
-  id          String   @id @default(cuid())
-  name        String
-  email       String
-  phone       String?
-  projectType String?
-  budgetRange String?
-  message     String
-  read        Boolean  @default(false)
-  createdAt   DateTime @default(now())
-}
-
-model SocialLink {
-  id          String   @id @default(cuid())
-  platform    String
-  url         String
-  icon        String?
-  order       Int      @default(0)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime
 }
 
 model SiteSettings {
-  id                   String   @id @default(cuid())
-  siteName             String   @default("JOSEPH.")
+  id                  String   @id
+  siteName            String   @default("JOSEPH.")
+  heroHeading         String   @default("FRAME YOUR STORY.")
+  heroSubtitle        String   @default("Cinematographer - Videographer - Editor")
+  heroCtaLabel        String   @default("View My Work")
+  heroCtaLink         String   @default("/work")
+  heroSecondaryCta    String   @default("Contact Me")
+  heroSecondaryLink   String   @default("/contact")
+  homeFeaturedEyebrow String   @default("Featured Work")
+  homeFeaturedTitle   String   @default("Selected Projects")
+  homeServicesEyebrow String   @default("What I Do")
+  homeServicesTitle   String   @default("Services built for stories that need to be seen.")
+  homeAboutEyebrow    String   @default("About")
+  homeCtaTitle        String   @default("Got a project in mind?")
+  homeCtaSubtitle     String   @default("Let us bring your vision to life.")
+  homeCtaButton       String   @default("Start a Conversation")
+  workEyebrow         String   @default("Portfolio")
+  workTitle           String   @default("Selected Work")
+  servicesEyebrow     String   @default("Services")
+  servicesTitle       String   @default("What I Offer")
+  servicesSubtitle    String   @default("End-to-end creative production from concept to final delivery.")
+  aboutEyebrow        String   @default("About")
+  contactEyebrow      String   @default("Contact")
+  contactTitle        String   @default("Let us Talk")
+  contactSubtitle     String   @default("Tell me about your project and I will get back to you.")
+  navLinks            String   @default("[{\"label\":\"Home\",\"href\":\"/\"},{\"label\":\"Work\",\"href\":\"/work\"},{\"label\":\"About\",\"href\":\"/about\"},{\"label\":\"Services\",\"href\":\"/services\"},{\"label\":\"Contact\",\"href\":\"/contact\"}]")
+  navCtaLabel         String   @default("Let us Talk")
+  formProjectTypes    String   @default("[\"Cinematography\",\"Videography\",\"Video Editing\",\"Commercial\",\"Social Media Content\",\"Creative Direction\",\"Other\"]")
+  formBudgets         String   @default("[\"Under $500\",\"$500 - $1,000\",\"$1,000 - $5,000\",\"$5,000 - $10,000\",\"$10,000+\",\"Not sure yet\"]")
+  formSuccessTitle    String   @default("Message sent")
+  formSuccessText     String   @default("Thanks for reaching out. I will get back to you soon.")
+  aboutName           String   @default("Joseph Chimaobi Egbuonu")
+  aboutHeadline       String   @default("Creative Director & Cinematographer")
+  aboutBio            String   @default("")
+  aboutImage          String?
+  aboutExperience     String?
+  aboutSkills         String?
+  aboutTools          String?
+  aboutAvailability   String   @default("Available for projects")
+  aboutLocation       String   @default("Lagos, Nigeria")
+  aboutEmail          String   @default("")
+  aboutPhone          String   @default("")
+  contactEmail        String   @default("")
+  contactPhone        String   @default("")
+  whatsappNumber      String   @default("")
+  whatsappQr          String?
+  seoTitle            String   @default("Joseph Chimaobi Egbuonu - Creative Portfolio")
+  seoDescription      String   @default("Cinematographer, Videographer & Creative Director")
+  seoOgImage          String?
+  footerNavigateTitle String   @default("Navigate")
+  footerConnectTitle  String   @default("Connect")
+  footerText          String   @default("Copyright Joseph Chimaobi Egbuonu. All rights reserved.")
+  previewToken        String?  @unique
+  previewEnabled      Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime
+}
 
-  heroHeading          String   @default("FRAME YOUR STORY.")
-  heroSubtitle         String   @default("Cinematographer - Videographer - Editor")
-  heroCtaLabel         String   @default("View My Work")
-  heroCtaLink          String   @default("/work")
-  heroSecondaryCta     String   @default("Contact Me")
-  heroSecondaryLink    String   @default("/contact")
+model SocialLink {
+  id        String   @id
+  platform  String
+  url       String
+  icon      String?
+  order     Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+}
 
-  homeFeaturedEyebrow  String   @default("Featured Work")
-  homeFeaturedTitle    String   @default("Selected Projects")
-  homeServicesEyebrow  String   @default("What I Do")
-  homeServicesTitle    String   @default("Services built for stories that need to be seen.")
-  homeAboutEyebrow     String   @default("About")
-  homeCtaTitle         String   @default("Got a project in mind?")
-  homeCtaSubtitle      String   @default("Let us bring your vision to life.")
-  homeCtaButton        String   @default("Start a Conversation")
+model SoftwareProject {
+  id          String   @id
+  title       String
+  slug        String   @unique
+  description String
+  type        String   @default("Web App")
+  techStack   String?
+  url         String?
+  repoUrl     String?
+  thumbnail   String?
+  gallery     String?
+  featured    Boolean  @default(false)
+  published   Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+}
 
-  workEyebrow          String   @default("Portfolio")
-  workTitle            String   @default("Selected Work")
-  servicesEyebrow      String   @default("Services")
-  servicesTitle        String   @default("What I Offer")
-  servicesSubtitle     String   @default("End-to-end creative production from concept to final delivery.")
-  aboutEyebrow         String   @default("About")
-  contactEyebrow       String   @default("Contact")
-  contactTitle         String   @default("Let us Talk")
-  contactSubtitle      String   @default("Tell me about your project and I will get back to you.")
-
-  navLinks             String   @default("[{\"label\":\"Home\",\"href\":\"/\"},{\"label\":\"Work\",\"href\":\"/work\"},{\"label\":\"About\",\"href\":\"/about\"},{\"label\":\"Services\",\"href\":\"/services\"},{\"label\":\"Contact\",\"href\":\"/contact\"}]")
-  navCtaLabel          String   @default("Let us Talk")
-
-  formProjectTypes     String   @default("[\"Cinematography\",\"Videography\",\"Video Editing\",\"Commercial\",\"Social Media Content\",\"Creative Direction\",\"Other\"]")
-  formBudgets          String   @default("[\"Under $500\",\"$500 - $1,000\",\"$1,000 - $5,000\",\"$5,000 - $10,000\",\"$10,000+\",\"Not sure yet\"]")
-  formSuccessTitle     String   @default("Message sent")
-  formSuccessText      String   @default("Thanks for reaching out. I will get back to you soon.")
-
-  aboutName            String   @default("Joseph Chimaobi Egbuonu")
-  aboutHeadline        String   @default("Creative Director & Cinematographer")
-  aboutBio             String   @default("")
-  aboutImage           String?
-  aboutExperience      String?
-  aboutSkills          String?
-  aboutTools           String?
-  aboutAvailability    String   @default("Available for projects")
-  aboutLocation        String   @default("Lagos, Nigeria")
-  aboutEmail           String   @default("")
-  aboutPhone           String   @default("")
-
-  contactEmail         String   @default("")
-  contactPhone         String   @default("")
-  whatsappNumber       String   @default("")
-  whatsappQr           String?
-
-  seoTitle             String   @default("Joseph Chimaobi Egbuonu - Creative Portfolio")
-  seoDescription       String   @default("Cinematographer, Videographer & Creative Director")
-  seoOgImage           String?
-
-  footerNavigateTitle  String   @default("Navigate")
-  footerConnectTitle   String   @default("Connect")
-  footerText           String   @default("Copyright Joseph Chimaobi Egbuonu. All rights reserved.")
-  previewToken   String?  @unique
-  previewEnabled Boolean  @default(false)
-
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+model Testimonial {
+  id         String   @id
+  clientName String
+  company    String?
+  role       String?
+  content    String
+  image      String?
+  order      Int      @default(0)
+  published  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime
 }
 
 model ThemeSettings {
-  id        String   @id @default(cuid())
+  id        String   @id
   mode      String   @default("dark")
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime
 }
 
-model ClientLogo {
-  id        String   @id @default(cuid())
-  name      String
-  logoUrl   String
-  website   String?
-  order     Int      @default(0)
-  published Boolean  @default(true)
+model User {
+  id        String   @id
+  email     String   @unique
+  password  String
+  name      String   @default("Admin")
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model PageView {
-  id        String   @id @default(cuid())
-  path      String
-  projectId String?
-  referrer  String?
-  userAgent String?
-  createdAt DateTime @default(now())
-
-  @@index([createdAt])
-  @@index([projectId])
-  @@index([path])
-}
-
-model PushSubscription {
-  id        String   @id @default(cuid())
-  endpoint  String   @unique
-  p256dh    String
-  auth      String
-  createdAt DateTime @default(now())
+  updatedAt DateTime
 }

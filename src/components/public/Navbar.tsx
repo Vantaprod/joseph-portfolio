@@ -9,6 +9,7 @@ const links = [
   { href: "/work", label: "Work" },
   { href: "/about", label: "About" },
   { href: "/services", label: "Services" },
+  { href: "/software", label: "Software" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -45,7 +46,7 @@ export function Navbar() {
           JOSEPH<span className="text-primary">.</span>
         </Link>
 
-        <ul className="hidden md:flex items-center gap-10">
+        <ul className="hidden md:flex items-center gap-8">
           {links.map((link) => {
             const active =
               link.href === "/"
